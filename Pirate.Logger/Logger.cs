@@ -58,7 +58,7 @@ public class Logger : ILogger
     private bool Write(string logType,string message, Dictionary<string, object> properties, Exception? exception = null)
     {
         if (_configuration.Target.UseConsole)
-            Console.WriteLine(message);
+            Console.WriteLine($"{DateTime.Now}: {logType}: {message}");
 
         if (_configuration.Target.UseFile)
             _fileHandler.WriteLine(_messageFormatter.FormatMessage(Enum.Parse<FileLogType>(logType), message, properties, exception));
