@@ -21,5 +21,15 @@ public class Application
                 { "Success", true }
             }
         );
+
+        Logger.Error("Something went wrong",
+            new Exception("This is a test exception"),
+            new()
+            {
+                { "UserId", 12345 },
+                { "Action", "Login" },
+                { "Success", false }
+            }
+        );
     }
 }
