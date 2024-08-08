@@ -10,7 +10,8 @@ public class FileHandler
 
     public FileHandler(IConfiguration configuration)
     {
-        _targetDirectory = configuration.GetSection("Pirate.Logger:TargetDirectory").Value ?? $"{Directory.GetCurrentDirectory()}\\logs";
+        _targetDirectory = configuration.GetSection("Pirate.Logger:TargetDirectory").Value ?? $"{Directory.GetCurrentDirectory()}\\logdumps";
+        _fileName = $"{DateTime.Now.Day}.{DateTime.Now.Month}.{DateTime.Now.Year}.{DateTime.Now.Hour}.{DateTime.Now.Minute}.{DateTime.Now.Second}";
     }
 
     public bool WriteLine(string message)
@@ -19,12 +20,12 @@ public class FileHandler
         {
             Directory.CreateDirectory(_targetDirectory);
         }
-        if (!Files.Exists($"{_targetDirectory}/log.txt"))
+        if (!Files.Exists($"{_targetDirectory}/{_fileName}.log"))
         {
-            Files.Create($"{_targetDirectory}/log.txt").Close();
+            Files.Create($"{_targetDirectory}/{_fileName}.log").Close();
         }
 
-
+        Files.AppendAllText($"{_targetDirectory}/{_fileName}.log", message + Environment.NewLine);
 
         return true;
     }
