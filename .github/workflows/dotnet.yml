@@ -1,0 +1,77 @@
+name: .NET & Deploy Package
+
+on:
+  push:
+    branches: [main, development]
+
+env:
+  NuGetDirectory: ${{ github.workspace}}/nuget
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v3
+        with:
+          dotnet-version: 8.0.x
+      - name: Restore dependencies
+        run: dotnet restore
+      - name: Build
+        run: dotnet build --no-restore
+
+  test:
+    runs-on: ubuntu-latest
+    needs: [build]
+    steps:
+      - uses: actions/checkout@v3
+      - name: Test
+        run: dotnet test --no-build --verbosity normal
+
+  create_package:
+    runs-on: ubuntu-latest
+    needs: [ build ]
+    steps:
+    - uses: actions/checkout@v3
+    - name: Update version
+      run: |
+        
+      shell: python
+
+    - name: Setup .NET
+      uses: actions/setup-dotnet@v3
+      with:
+        dotnet-version: 8.0.x
+    - name: Restore dependencies
+      run: dotnet restore
+    - name: Build
+      run: dotnet build --no-restore --configuration Release
+      
+    - name: Package
+      run: dotnet pack --configuration Release --output ${{ env.NuGetDirectory }}
+
+    - name: Publish to NuGet
+      shell: pwsh
+      run: |
+        $files=Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg
+        foreach($file in $files) {
+            try {
+              dotnet nuget push $file --api-key "${{ secrets.NUGET_APIKEY }}" --source "https://api.nuget.org/v3/index.json" --skip-duplicate
+            }
+            catch {
+              Write-Warning $Error[0]
+            }
+          }
+    - name: Publish to Github Packages
+      shell: pwsh
+      run: |
+        $files=Get-ChildItem "${{ env.NuGetDirectory }}" -Recurse -Include *.nupkg
+        foreach($file in $files) {
+            try {
+              dotnet nuget push $file --api-key "${{ secrets.PACKAGES_APIKEY }}" --source "https://nuget.pkg.github.com/joerivanarkel/index.json" --skip-duplicate
+            }
+            catch {
+              Write-Warning $Error[0]
+            }
+        }
